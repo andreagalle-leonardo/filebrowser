@@ -1,0 +1,5 @@
+{
+  "name": "File Browser Dev",
+  "forwardPorts": [8000, 5173],
+  "postCreateCommand": "go mod download && go build -o filebrowser ."
+}

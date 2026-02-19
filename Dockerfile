@@ -1,4 +1,23 @@
-## Multistage build: First stage fetches dependencies
+## First stage: Compile Go binary (if filebrowser doesn't exist locally)
+FROM golang:1.25-alpine AS builder
+
+RUN apk add --no-cache nodejs npm
+
+WORKDIR /build
+COPY go.mod go.sum ./
+RUN go mod download
+
+COPY . .
+
+# Build frontend
+WORKDIR /build/frontend
+RUN npm install -g pnpm && pnpm install && pnpm run build
+
+# Build Go binary
+WORKDIR /build
+RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o filebrowser .
+
+## Second stage: Fetch dependencies
 FROM alpine:3.23 AS fetcher
 
 # install and copy ca-certificates, mailcap, and tini-static; download JSON.sh
@@ -6,7 +25,7 @@ RUN apk update && \
     apk --no-cache add ca-certificates mailcap tini-static && \
     wget -O /JSON.sh https://raw.githubusercontent.com/dominictarr/JSON.sh/0d5e5c77365f63809bf6e77ef44a1f34b0e05840/JSON.sh
 
-## Second stage: Use lightweight BusyBox image for final runtime environment
+## Third stage: Use lightweight BusyBox image for final runtime environment
 FROM busybox:1.37.0-musl
 
 # Define non-root user UID and GID
@@ -17,8 +36,8 @@ ENV GID=1000
 RUN addgroup -g $GID user && \
     adduser -D -u $UID -G user user
 
-# Copy binary, scripts, and configurations into image with proper ownership
-COPY --chown=user:user filebrowser /bin/filebrowser
+# Copy binary (from builder if local doesn't exist), scripts, and configurations into image with proper ownership
+COPY --from=builder --chown=user:user /build/filebrowser /bin/filebrowser
 COPY --chown=user:user docker/common/ /
 COPY --chown=user:user docker/alpine/ /
 COPY --chown=user:user --from=fetcher /sbin/tini-static /bin/tini
