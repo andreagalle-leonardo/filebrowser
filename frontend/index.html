@@ -8,16 +8,16 @@
       content="width=device-width, initial-scale=1, user-scalable=no"
     />
 
-    <title>File Browser</title>
+    <title>Data Platform</title>
 
-    <link rel="icon" type="image/svg+xml" href="/img/icons/favicon.svg" />
+    <link rel="icon" type="image/svg+xml" href="/img/icons/favicon.ico" />
     <link rel="shortcut icon" href="/img/icons/favicon.ico" />
     <link
       rel="apple-touch-icon"
       sizes="180x180"
       href="/img/icons/apple-touch-icon.png"
     />
-    <meta name="apple-mobile-web-app-title" content="File Browser" />
+    <meta name="apple-mobile-web-app-title" content="Data Platform" />
 
     <!-- Add to home screen for Android and modern mobile browsers -->
     <link
@@ -56,8 +56,8 @@
         return `${window.FileBrowser.StaticURL}/${url.replace(/^\/+/, "")}`;
       };
       var dynamicManifest = {
-        name: window.FileBrowser.Name || "File Browser",
-        short_name: window.FileBrowser.Name || "File Browser",
+        name: window.FileBrowser.Name || "Data Platform",
+        short_name: window.FileBrowser.Name || "Data Platform",
         icons: [
           {
             src: window.__prependStaticUrl(

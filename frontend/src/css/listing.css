@@ -172,7 +172,7 @@ html[dir="rtl"] #listing {
 }
 
 #listing .item[aria-selected="true"] {
-  background: var(--blue) !important;
+  background: var(--red) !important;
   color: var(--iconSecondary) !important;
 }
 
@@ -266,7 +266,7 @@ html[dir="rtl"] #listing {
   left: 0;
   z-index: 99999;
   width: 100%;
-  background-color: var(--blue);
+  background-color: var(--red);
   height: 4em;
   padding: 0.5em 0.5em 0.5em 1em;
   justify-content: space-between;

@@ -43,7 +43,7 @@ header img {
 }
 
 header img {
-  height: 2.5em;
+  height: 4.0em;
 }
 
 header .action span {
@@ -258,7 +258,7 @@ html[dir="rtl"] #search .boxes h3 {
 }
 
 #search .boxes > div > div {
-  background: var(--blue);
+  background: var(--red);
   color: #fff;
   text-align: center;
   width: 10em;

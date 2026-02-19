@@ -70,7 +70,7 @@ export default {
     },
     "bar-color": {
       type: String,
-      default: "#2196f3", // match .blue color to Material Design's 'Blue 500' color
+      default: "#E4002B", // match .blue color to Material Design's 'Blue 500' color
     },
     "bar-transition": {
       type: String,

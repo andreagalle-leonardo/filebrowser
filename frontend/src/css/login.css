@@ -8,10 +8,11 @@
 }
 
 #login img {
-  width: 4em;
-  height: 4em;
+  width: 16em;
+  height: 16em;
   margin: 0 auto;
   display: block;
+  max-width: 100%;
 }
 
 #login h1 {
@@ -66,7 +67,7 @@
 #login p {
   cursor: pointer;
   text-align: right;
-  color: var(--blue);
+  color: var(--red);
   text-transform: lowercase;
   font-weight: 500;
   font-size: 0.9rem;

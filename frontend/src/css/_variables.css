@@ -1,8 +1,8 @@
 :root {
   --blue: #2196f3;
   --dark-blue: #1e88e5;
-  --red: #f44336;
-  --dark-red: #d32f2f;
+  --red: #E4002B;
+  --dark-red: #99011d;
   --moon-grey: #f2f2f2;
 
   --icon-red: #da4453;
@@ -23,7 +23,7 @@
   --surfacePrimary: rgb(255, 255, 255);
   --surfaceSecondary: rgb(230, 230, 230);
   --divider: rgba(0, 0, 0, 0.05);
-  --iconPrimary: var(--icon-blue);
+  --iconPrimary: var(--icon-red);
   --iconSecondary: rgb(255, 255, 255);
   --iconTertiary: rgb(204, 204, 204);
   --textPrimary: rgb(111, 111, 111);

@@ -36,8 +36,8 @@
 }
 
 .epub-reader .tocAreaButton.active {
-  color: var(--blue);
-  border-color: var(--dark-blue);
+  color: var(--red);
+  border-color: var(--dark-red);
 }
 
 .epub-reader .tocArea {

@@ -229,7 +229,7 @@
 .file-icons [data-ext=".rtf"] i,
 .file-icons [data-ext=".vob"] i,
 .file-icons [data-ext=".wim"] i {
-  color: var(--icon-blue);
+  color: var(--icon-red);
 }
 
 /* #60f - Various */
@@ -243,7 +243,7 @@
 /* Overrides */
 
 .file-icons [data-dir="true"] i {
-  color: var(--icon-blue);
+  color: var(--icon-red);
 }
 .file-icons [data-dir="true"] i::before {
   content: "folder";

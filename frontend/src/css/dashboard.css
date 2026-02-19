@@ -93,8 +93,8 @@ html[dir="rtl"] .dashboard #nav .wrapper {
 }
 
 .dashboard #nav ul li.active {
-  border-color: var(--blue);
-  color: var(--blue);
+  border-color: var(--red);
+  color: var(--red);
 }
 
 .dashboard #nav ul li.active::before {
@@ -104,7 +104,7 @@ html[dir="rtl"] .dashboard #nav .wrapper {
   top: 0;
   left: 0;
   content: "";
-  background: var(--blue);
+  background: var(--red);
   opacity: 0.08;
 }
 
@@ -277,7 +277,7 @@ body.rtl .card .card-action {
 }
 
 .card#share ul li a {
-  color: var(--blue);
+  color: var(--red);
   cursor: pointer;
   margin-right: auto;
 }
@@ -300,7 +300,7 @@ body.rtl .card .card-action {
   width: 150%;
   font-size: 0.6em;
   text-align: center;
-  background: #44a6f5;
+  background: #E4002B;
   color: #fff;
   padding: 0.5em 0.2em;
   border-radius: 0.4em;
@@ -359,7 +359,7 @@ body.rtl .card .card-action {
 }
 
 .file-list li[aria-selected="true"] {
-  background: var(--blue) !important;
+  background: var(--red) !important;
   color: var(--iconSecondary) !important;
   transition: 0.1s ease all;
 }

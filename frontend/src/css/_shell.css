@@ -74,7 +74,7 @@ body.rtl .shell-content {
 }
 
 .shell__prompt i {
-  color: var(--blue);
+  color: var(--red);
 }
 
 .shell__text {
