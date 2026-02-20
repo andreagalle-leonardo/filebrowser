@@ -26,10 +26,27 @@ for arg in "$@"; do
   esac
 done
 
-# If no config argument is provided, set the default and add it to the args                                                                 
-if [ -z "$config_file" ]; then 
-  config_file="/config/settings.json"                                                                                                                                                                                                 
-  set -- --config=/config/settings.json "$@"                                                                                                       
-fi                                                                                                                                                                                                                                                                                                                                                             
+# If no config argument is provided, set the default and add it to the args
+if [ -z "$config_file" ]; then
+  config_file="/config/settings.json"
+  set -- --config=/config/settings.json "$@"
+fi
+
+# Apply auth configuration from environment variables if set
+if [ -n "$FB_AUTH_METHOD" ]; then
+  AUTH_ARGS="--auth.method=${FB_AUTH_METHOD}"
+  if [ -n "$FB_AUTH_HEADER" ]; then
+    AUTH_ARGS="$AUTH_ARGS --auth.header=${FB_AUTH_HEADER}"
+  fi
+  if [ -n "$FB_AUTH_LOGOUT_PAGE" ]; then
+    AUTH_ARGS="$AUTH_ARGS --auth.logoutPage=${FB_AUTH_LOGOUT_PAGE}"
+  fi
+  # init crea il DB con la config auth; se il DB esiste già, config set la aggiorna
+  if [ ! -f "/database/filebrowser.db" ]; then
+    filebrowser config init --config="$config_file" $AUTH_ARGS
+  else
+    filebrowser config set --config="$config_file" $AUTH_ARGS
+  fi
+fi
 
 exec filebrowser "$@"
