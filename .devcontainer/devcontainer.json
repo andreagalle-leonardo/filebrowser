@@ -2,7 +2,7 @@
   "name": "File Browser Dev",
   // Default image used by GitHub Codespaces
   "image": "mcr.microsoft.com/devcontainers/universal:latest",
-  "forwardPorts": [8000, 5173, 8080],
+  "forwardPorts": [8000, 5173, 8080, 8081],
   // Download Go dependencies and build the binary
   "postCreateCommand": "go mod download && go build -o filebrowser ."
 }
