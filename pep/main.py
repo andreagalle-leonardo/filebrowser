@@ -8,6 +8,21 @@ from fastapi.responses import JSONResponse
 app = FastAPI()
 
 FILEBROWSER_URL = os.environ.get("FILEBROWSER_URL", "http://filebrowser:80")
+
+# NOTA ARCHITETTURALE — decompressione automatica di httpx
+# --------------------------------------------------------
+# httpx.AsyncClient decomprime SEMPRE automaticamente le risposte (gzip, deflate,
+# brotli) a livello di transport, prima che il body arrivi a `upstream.content`.
+# Di conseguenza:
+#   1. Non inoltriamo Accept-Encoding a FileBrowser → FileBrowser non comprime
+#      (difesa primaria, evita anche overhead inutile di compress/decompress)
+#   2. Rimuoviamo Content-Encoding dalla risposta → anche se FileBrowser
+#      comprimesse comunque, il body è già decompresso e l'header sarebbe falso
+#      (difesa secondaria, rende il proxy corretto indipendentemente dal upstream)
+#
+# Se in futuro httpx venisse sostituito con una libreria che NON decomprime
+# automaticamente (es. aiohttp con auto_decompress=False), le due difese
+# andrebbero rivalutate: la (2) diventerebbe sbagliata, la (1) rimarrebbe corretta.
 # Futuro: PDP_URL = os.environ.get("PDP_URL", "http://pdp:8181")
 
 
@@ -82,11 +97,16 @@ async def reverse_proxy(path: str, request: Request) -> Response:
     # Legge il body della richiesta (upload, ecc.)
     body = await request.body()
 
-    # Propaga tutti gli header originali tranne Host (lo riscrive httpx)
+    # Propaga tutti gli header originali tranne:
+    # - host: lo riscrive httpx
+    # - content-length: verrà ricalcolato
+    # - accept-encoding: httpx decomprime automaticamente le risposte, quindi
+    #   se propagassimo gzip FileBrowser comprime, httpx decomprime, ma l'header
+    #   Content-Encoding: gzip rimane nella risposta → ERR_CONTENT_DECODING_FAILED
     headers = {
         k: v
         for k, v in request.headers.items()
-        if k.lower() not in ("host", "content-length")
+        if k.lower() not in ("host", "content-length", "accept-encoding")
     }
 
     async with httpx.AsyncClient() as client:
@@ -114,8 +134,11 @@ async def reverse_proxy(path: str, request: Request) -> Response:
         # Ricalcola Content-Length dopo la modifica
         response_headers["content-length"] = str(len(response_body))
 
-    # Rimuove header che httpx/FastAPI non deve propagare così com'è
-    for h in ("transfer-encoding",):
+    # Rimuove header che httpx/FastAPI non deve propagare così com'è:
+    # - transfer-encoding: gestito da uvicorn/FastAPI
+    # - content-encoding: httpx ha già decompresso il body, propagarlo
+    #   causerebbe ERR_CONTENT_DECODING_FAILED nel browser
+    for h in ("transfer-encoding", "content-encoding"):
         response_headers.pop(h, None)
 
     return Response(
