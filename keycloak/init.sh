@@ -1,7 +1,7 @@
 #!/bin/bash
 # keycloak/init.sh
 #
-# Inizializza il realm "filebrowser" con client, gruppi e utenti di test.
+# Inizializza il realm "dataplatform" con client, gruppi e utenti di test.
 # Idempotente: ogni oggetto viene creato solo se non esiste già.
 # Eseguito dal servizio "keycloak-init" in compose.yaml al primo avvio.
 #
@@ -12,7 +12,7 @@ set -euo pipefail
 
 KCADM=/opt/keycloak/bin/kcadm.sh
 KC_URL=http://keycloak:8080
-REALM=filebrowser
+REALM=dataplatform
 
 # Deve corrispondere a OAUTH2_PROXY_CLIENT_SECRET in compose.yaml
 CLIENT_ID=oauth2-proxy
@@ -49,7 +49,7 @@ else
   $KCADM create realms --config /tmp/kcadm.config \
     -s realm="$REALM" \
     -s enabled=true \
-    -s displayName="File Browser"
+    -s displayName="Data Platform"
 fi
 
 # ---------------------------------------------------------------------------
@@ -81,6 +81,9 @@ CLIENT_DB_ID=$(
 
 if [ -n "$CLIENT_DB_ID" ]; then
   echo "ℹ️  Client '$CLIENT_ID' già presente (id: $CLIENT_DB_ID), skip."
+keycloak  # Aggiorna post.logout.redirect.uris se mancante (attributo Keycloak 17+, idempotente)
+  $KCADM update "clients/${CLIENT_DB_ID}" -r "$REALM" --config /tmp/kcadm.config \
+    -s 'attributes={"post.logout.redirect.uris":"http://localhost:8080##http://localhost:8080/"}' 2>/dev/null || true
 else
   echo "🔑 Creo client '$CLIENT_ID'..."
   CLIENT_DB_ID=$(
@@ -92,6 +95,7 @@ else
       -s standardFlowEnabled=true \
       -s directAccessGrantsEnabled=true \
       -s "redirectUris=[\"$REDIRECT_URI\"]" \
+      -s 'attributes={"post.logout.redirect.uris":"http://localhost:8080##http://localhost:8080/"}' \
       -s 'webOrigins=["*"]'
   )
   echo "   ↪ id: $CLIENT_DB_ID"

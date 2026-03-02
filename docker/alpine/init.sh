@@ -42,10 +42,12 @@ if [ -n "$FB_AUTH_METHOD" ]; then
     AUTH_ARGS="$AUTH_ARGS --auth.logoutPage=${FB_AUTH_LOGOUT_PAGE}"
   fi
   # init crea il DB con la config auth; se il DB esiste già, config set la aggiorna
+  # --createUserDir=true  → ogni nuovo utente riceve automaticamente /srv/<username> come scope
+  # --scope=              → scope di default vuoto: MakeUserDir usa il nome utente come subdir
   if [ ! -f "/database/filebrowser.db" ]; then
-    filebrowser config init --config="$config_file" $AUTH_ARGS
+    filebrowser config init --config="$config_file" $AUTH_ARGS #--createUserDir=true --scope=
   else
-    filebrowser config set --config="$config_file" $AUTH_ARGS
+    filebrowser config set --config="$config_file" $AUTH_ARGS #--createUserDir=true --scope=
   fi
 fi
 

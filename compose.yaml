@@ -13,8 +13,8 @@ services:
       - REDIS_CACHE_URL=redis://default:filebrowser@redis:6379
       # Modalità Proxy Header: FileBrowser si fida dell'header impostato da oauth2-proxy
       - FB_AUTH_METHOD=proxy
-      - FB_AUTH_HEADER=X-Auth-Request-Preferred-Username
-      - FB_AUTH_LOGOUT_PAGE=http://localhost:8080/oauth2/sign_out?rd=http%3A%2F%2Flocalhost%3A8081%2Frealms%2Ffilebrowser%2Fprotocol%2Fopenid-connect%2Flogout%3Fpost_logout_redirect_uri%3Dhttp%3A%2F%2Flocalhost%3A8080
+      - FB_AUTH_HEADER=X-Forwarded-Preferred-Username
+      - FB_AUTH_LOGOUT_PAGE=http://localhost:8080/oauth2/sign_out?rd=http%3A%2F%2Flocalhost%3A8081%2Frealms%2Fdataplatform%2Fprotocol%2Fopenid-connect%2Flogout%3Fclient_id%3Doauth2-proxy%26post_logout_redirect_uri%3Dhttp%3A%2F%2Flocalhost%3A8080
       # Ascolta su tutte le interfacce (non solo localhost) così NGINX può raggiungerlo
       - FB_ADDRESS=0.0.0.0
       - FB_PORT=80
@@ -88,7 +88,7 @@ services:
     environment:
       - OAUTH2_PROXY_PROVIDER=keycloak-oidc
       # Back-channel (server→server): discovery e token exchange usano l'hostname interno Docker
-      - OAUTH2_PROXY_OIDC_ISSUER_URL=http://keycloak:8080/realms/filebrowser
+      - OAUTH2_PROXY_OIDC_ISSUER_URL=http://keycloak:8080/realms/dataplatform
       # Il token JWT ha iss=localhost:8081 (KC_HOSTNAME); saltiamo il confronto
       # issuer perché discovery avviene su keycloak:8080 ma iss è localhost:8081
       - OAUTH2_PROXY_INSECURE_OIDC_SKIP_ISSUER_VERIFICATION=true
@@ -101,12 +101,15 @@ services:
       - OAUTH2_PROXY_UPSTREAMS=http://pep:8000
       - OAUTH2_PROXY_HTTP_ADDRESS=0.0.0.0:4180
       - OAUTH2_PROXY_EMAIL_DOMAINS=*
-      # Aggiunge X-Auth-Request-User/Groups/Email/Preferred-Username alle richieste upstream
-      - OAUTH2_PROXY_SET_XAUTHREQUEST=true
+      # Aggiunge X-Forwarded-User/Email/Preferred-Username/Groups alle richieste upstream (proxy mode)
+      # SET_XAUTHREQUEST aggiunge headers alla risposta (per nginx auth_request), non all'upstream request
+      - OAUTH2_PROXY_PASS_USER_HEADERS=true
       # URL a cui Keycloak redirige il browser dopo il login (porta esterna NGINX)
       - OAUTH2_PROXY_REDIRECT_URL=http://localhost:8080/oauth2/callback
       - OAUTH2_PROXY_SKIP_PROVIDER_BUTTON=true
       - OAUTH2_PROXY_COOKIE_SECURE=false # HTTP in dev, true in produzione con HTTPS
+      # Whitelist per il redirect rd= usato dal logout verso Keycloak (porta front-channel)
+      - OAUTH2_PROXY_WHITELIST_DOMAINS=localhost:8081
     expose:
       - "4180"
     depends_on:
