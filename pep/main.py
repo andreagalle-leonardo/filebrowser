@@ -1,5 +1,6 @@
 import json
 import os
+import sys
 import httpx
 
 from fastapi import FastAPI, Request, Response
@@ -23,7 +24,33 @@ FILEBROWSER_URL = os.environ.get("FILEBROWSER_URL", "http://filebrowser:80")
 # Se in futuro httpx venisse sostituito con una libreria che NON decomprime
 # automaticamente (es. aiohttp con auto_decompress=False), le due difese
 # andrebbero rivalutate: la (2) diventerebbe sbagliata, la (1) rimarrebbe corretta.
+#
+# NOTA SUGLI HEADER DI oauth2-proxy
+# ----------------------------------
+# Con OAUTH2_PROXY_PASS_USER_HEADERS=true oauth2-proxy imposta:
+#   X-Forwarded-Preferred-Username  → username (usato da FileBrowser come identità)
+#   X-Forwarded-User                → subject UUID di Keycloak
+#   X-Forwarded-Email               → email
+#   X-Forwarded-Groups              → gruppi Keycloak (usati dal PEP per AuthZ)
+#
+# Solo X-Forwarded-Preferred-Username viene inoltrato a FileBrowser (è il suo
+# FB_AUTH_HEADER). Gli altri vengono consumati dal PEP e rimossi.
+#
 # Futuro: PDP_URL = os.environ.get("PDP_URL", "http://pdp:8181")
+
+
+# ---------------------------------------------------------------------------
+# Header oauth2-proxy da consumare nel PEP e NON inoltrare a FileBrowser
+# ---------------------------------------------------------------------------
+_STRIP_HEADERS = {
+    "host",
+    "content-length",
+    "accept-encoding",
+    # oauth2-proxy PASS_USER_HEADERS — il PEP li legge, FileBrowser non li deve vedere
+    "x-forwarded-user",
+    "x-forwarded-email",
+    "x-forwarded-groups",
+}
 
 
 # ---------------------------------------------------------------------------
@@ -31,17 +58,31 @@ FILEBROWSER_URL = os.environ.get("FILEBROWSER_URL", "http://filebrowser:80")
 # ---------------------------------------------------------------------------
 
 def _is_resources_listing(path: str) -> bool:
-    """Ritorna True se la request è una GET su /api/resources che torna una directory."""
+    """Ritorna True se la request è una GET su /api/resources."""
     return path.startswith("/api/resources")
+
+
+def _is_admin(request: Request) -> bool:
+    """
+    Controlla se l'utente appartiene al gruppo 'admin' di Keycloak.
+
+    oauth2-proxy con PASS_USER_HEADERS=true imposta X-Forwarded-Groups con i
+    gruppi Keycloak dell'utente (es. "admin,role:offline_access,...").
+    Gestiamo sia la forma con slash (/admin) che senza (admin) per robustezza.
+    """
+    groups_header = request.headers.get("x-forwarded-groups", "")
+    groups = {g.strip().lstrip("/").lower() for g in groups_header.split(",") if g.strip()}
+    return "admin" in groups
 
 
 def _filter_items(items: list, username: str) -> list:
     """
-    PEP: filtra gli item della directory listing.
+    PEP: filtra gli item della directory listing per utenti non-admin.
 
     Regola attuale: nasconde qualsiasi file/cartella il cui nome
     contiene la parola 'secret' (case-insensitive).
 
+    Admin (gruppo 'admin' in Keycloak): vede tutto, questa funzione non viene chiamata.
     TODO: sostituire con una chiamata al PDP esterno per policy ABAC.
     """
     # Futuro:
@@ -97,21 +138,25 @@ async def reverse_proxy(path: str, request: Request) -> Response:
     # Legge il body della richiesta (upload, ecc.)
     body = await request.body()
 
-    # Propaga tutti gli header originali tranne:
-    # - host: lo riscrive httpx
-    # - content-length: verrà ricalcolato
-    # - accept-encoding: httpx decomprime automaticamente le risposte, quindi
-    #   se propagassimo gzip FileBrowser comprime, httpx decomprime, ma l'header
-    #   Content-Encoding: gzip rimane nella risposta → ERR_CONTENT_DECODING_FAILED
+    # Propaga tutti gli header originali tranne quelli in _STRIP_HEADERS.
+    # X-Forwarded-Preferred-Username viene inoltrato: FileBrowser ne ha bisogno
+    # come FB_AUTH_HEADER per identificare l'utente autenticato.
     headers = {
         k: v
         for k, v in request.headers.items()
-        if k.lower() not in ("host", "content-length", "accept-encoding")
+        if k.lower() not in _STRIP_HEADERS
     }
 
-    # DEBUG TEMPORANEO: logga gli header inviati a FileBrowser
-    import sys
-    print(f"[PEP→FB] {request.method} /{path} | forwarded headers: { {k: v for k, v in headers.items() if 'auth' in k.lower() or 'preferred' in k.lower()} }", file=sys.stderr, flush=True)
+    username = (
+        request.headers.get("x-forwarded-preferred-username")
+        or "anonymous"
+    )
+
+    print(
+        f"[PEP→FB] {request.method} /{path} | forwarded headers: "
+        f"{ {k: v for k, v in headers.items() if 'auth' in k.lower() or 'preferred' in k.lower()} }",
+        file=sys.stderr, flush=True,
+    )
 
     async with httpx.AsyncClient() as client:
         upstream = await client.request(
@@ -133,10 +178,11 @@ async def reverse_proxy(path: str, request: Request) -> Response:
         and "application/json" in content_type
         and upstream.status_code == 200
     ):
-        username = request.headers.get("x-user-header", "anonymous")
-        response_body = _patch_listing_response(response_body, username)
-        # Ricalcola Content-Length dopo la modifica
-        response_headers["content-length"] = str(len(response_body))
+        # Admin (gruppo 'admin' in Keycloak) vede tutto senza filtri
+        if not _is_admin(request):
+            response_body = _patch_listing_response(response_body, username)
+            # Ricalcola Content-Length solo se il body è stato effettivamente modificato
+            response_headers["content-length"] = str(len(response_body))
 
     # Rimuove header che httpx/FastAPI non deve propagare così com'è:
     # - transfer-encoding: gestito da uvicorn/FastAPI
