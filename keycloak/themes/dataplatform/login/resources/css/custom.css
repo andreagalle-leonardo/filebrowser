@@ -1,0 +1,82 @@
+/* ── Data Platform — custom login theme ──────────────────────────────────────
+   - Logo 333px, centrato sopra la maschera
+   - Sfondo pagina: background.png
+   - Bottoni primari (Sign In / Submit / Logout): #e4002b
+   ─────────────────────────────────────────────────────────────────────── */
+
+/* ── Sfondo pagina ──────────────────────────────────────────────────────── */
+body,
+.pf-v5-c-login {
+  background-image: url('../img/background.png') !important;
+  background-size: cover !important;
+  background-position: center center !important;
+  background-repeat: no-repeat !important;
+}
+
+/* ── Nascondi il testo del realm nell'header ─────────────────────────────── */
+#kc-header-wrapper,
+.pf-v5-c-login__header h1,
+.pf-v5-c-login__header p,
+.pf-v5-c-login__header .pf-v5-c-title {
+  display: none;
+}
+
+/* ── Logo (keycloak.v2 / PatternFly 5) ──────────────────────────────────── */
+.pf-v5-c-login__header img,
+.pf-v5-c-login__header .pf-v5-c-brand img {
+  content: url('../img/logo.png');
+  height: 333px;
+  width: auto;
+  display: block;
+  margin: 0 auto;
+}
+
+/* ── Logo (tema classico) ────────────────────────────────────────────────── */
+#kc-header {
+  background: url('../img/logo.png') no-repeat center center;
+  background-size: contain;
+  height: 333px;
+  width: 100%;
+}
+
+/* Fallback: header senza tag <img> */
+.pf-v5-c-login__header .pf-v5-c-login__header-brand:not(:has(img)) {
+  background: url('../img/logo.png') no-repeat center center;
+  background-size: contain;
+  height: 333px;
+  display: block;
+}
+
+/* ── Bottoni primari: Sign In / Submit / Logout (#e4002b) ────────────────── */
+/* PatternFly 5 */
+.pf-v5-c-button.pf-m-primary,
+.pf-v5-c-button.pf-m-primary:visited {
+  --pf-v5-c-button--m-primary--BackgroundColor: #e4002b;
+  --pf-v5-c-button--m-primary--hover--BackgroundColor: #b5002a;
+  --pf-v5-c-button--m-primary--focus--BackgroundColor: #b5002a;
+  --pf-v5-c-button--m-primary--active--BackgroundColor: #8c0020;
+  background-color: #e4002b;
+  border-color: #e4002b;
+  color: #ffffff;
+}
+.pf-v5-c-button.pf-m-primary:hover {
+  background-color: #b5002a !important;
+  border-color: #b5002a !important;
+}
+
+/* Tema classico */
+#kc-login,
+.pf-c-button.pf-m-primary,
+.btn-primary,
+input[type="submit"],
+button[type="submit"] {
+  background-color: #e4002b !important;
+  border-color: #e4002b !important;
+  color: #ffffff !important;
+}
+.btn-primary:hover,
+input[type="submit"]:hover,
+button[type="submit"]:hover {
+  background-color: #b5002a !important;
+  border-color: #b5002a !important;
+}

@@ -16,7 +16,7 @@ REALM=dataplatform
 
 # Deve corrispondere a OAUTH2_PROXY_CLIENT_SECRET in compose.yaml
 CLIENT_ID=oauth2-proxy
-CLIENT_SECRET=dev-client-secret-filebrowser
+CLIENT_SECRET=dev-client-secret-dataplatform
 REDIRECT_URI=http://localhost:8080/oauth2/callback
 
 # Helper: estrae il valore del primo campo "id" dall'output JSON di kcadm
@@ -44,12 +44,16 @@ echo "✅ Keycloak pronto."
 # ---------------------------------------------------------------------------
 if $KCADM get realms/"$REALM" --config /tmp/kcadm.config &>/dev/null; then
   echo "ℹ️  Realm '$REALM' già presente, skip."
+  # Assicura il tema custom (idempotente)
+  $KCADM update realms/"$REALM" --config /tmp/kcadm.config \
+    -s loginTheme=dataplatform 2>/dev/null || true
 else
   echo "📦 Creo realm '$REALM'..."
   $KCADM create realms --config /tmp/kcadm.config \
     -s realm="$REALM" \
     -s enabled=true \
-    -s displayName="Data Platform"
+    -s displayName="Data Platform" \
+    -s loginTheme=dataplatform
 fi
 
 # ---------------------------------------------------------------------------

@@ -66,6 +66,13 @@ services:
       - KC_HOSTNAME_BACKCHANNEL_DYNAMIC=true
       - KC_HTTP_ENABLED=true
       - KC_HOSTNAME_STRICT=false
+    volumes:
+      # Tema custom per il logo nella pagina di login
+      - ./keycloak/themes/dataplatform/login/theme.properties:/opt/keycloak/themes/dataplatform/login/theme.properties:ro
+      - ./keycloak/themes/dataplatform/login/resources/css/custom.css:/opt/keycloak/themes/dataplatform/login/resources/css/custom.css:ro
+      # Logo dal branding ufficiale del progetto
+      - ./branding/logo.png:/opt/keycloak/themes/dataplatform/login/resources/img/logo.png:ro
+      - ./branding/background.png:/opt/keycloak/themes/dataplatform/login/resources/img/background.png:ro
     # --health-enabled=true: abilita /health/ready (disabilitato di default in start-dev)
     command: start-dev --health-enabled=true
     ports:
@@ -94,7 +101,7 @@ services:
       - OAUTH2_PROXY_INSECURE_OIDC_SKIP_ISSUER_VERIFICATION=true
       - OAUTH2_PROXY_CLIENT_ID=oauth2-proxy
       # Deve corrispondere a CLIENT_SECRET in keycloak/init.sh
-      - OAUTH2_PROXY_CLIENT_SECRET=dev-client-secret-filebrowser
+      - OAUTH2_PROXY_CLIENT_SECRET=dev-client-secret-dataplatform
       # 32 byte base64-urlsafe — va bene per dev, in produzione: openssl rand -base64 32 | tr -- '+/' '-_' | tr -d '='
       - OAUTH2_PROXY_COOKIE_SECRET=MTIzNDU2Nzg5MDEyMzQ1Njc4OTAxMjM0NTY3ODkwMTI=
       # Upstream: il PEP riceve le richieste già autenticate con gli header utente
