@@ -85,7 +85,7 @@ CLIENT_DB_ID=$(
 
 if [ -n "$CLIENT_DB_ID" ]; then
   echo "ℹ️  Client '$CLIENT_ID' già presente (id: $CLIENT_DB_ID), skip."
-keycloak  # Aggiorna post.logout.redirect.uris se mancante (attributo Keycloak 17+, idempotente)
+# Aggiorna post.logout.redirect.uris se mancante (attributo Keycloak 17+, idempotente)
   $KCADM update "clients/${CLIENT_DB_ID}" -r "$REALM" --config /tmp/kcadm.config \
     -s 'attributes={"post.logout.redirect.uris":"http://localhost:8080##http://localhost:8080/"}' 2>/dev/null || true
 else
